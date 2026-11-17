@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 品牌色阶：整站统一取紫色族，避免各处再散落硬编码 -->
+    <color name="brand_primary">#FF6200EE</color>
+    <color name="brand_primary_dark">#FF3700B3</color>
+    <color name="brand_primary_deep">#FF1A0033</color>
+    <color name="brand_secondary">#FFB388FF</color>
+    <color name="brand_tint">#FFF3EDFF</color>
+    <color name="brand_on_primary">#FFFFFFFF</color>
+    <color name="brand_on_primary_muted">#D8CEBEFF</color>
+    <color name="brand_on_primary_faint">#8FB6A3E8</color>
+    <color name="brand_ripple_dark">#33FFFFFF</color>
+    <color name="brand_ripple_light">#1F6200EE</color>
+
+    <!-- 文本灰阶 -->
+    <color name="ink_strong">#FF222230</color>
+    <color name="ink_body">#FF33333F</color>
+    <color name="ink_muted">#FF7A7A8C</color>
+    <color name="ink_faint">#FF9A9AAA</color>
+
+    <color name="auth_page_bg">#FFFBFAFF</color>
+    <color name="input_stroke">#FFE0D8F5</color>
+    <color name="input_stroke_focus">#FF6200EE</color>
+    <color name="field_error">#FFD14D72</color>
+
+    <!-- 深色底（视频 tab）上的文字 -->
+    <color name="on_dark">#FFFFFFFF</color>
+    <color name="on_dark_muted">#B3FFFFFF</color>
+</resources>
