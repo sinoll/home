@@ -4,10 +4,7 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.TypedValue;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -18,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.sinoll.home.MainActivity;
 import com.sinoll.home.R;
 import com.sinoll.home.data.ImageLoader;
 import com.sinoll.home.data.Post;
@@ -26,6 +22,7 @@ import com.sinoll.home.data.PostRepository;
 import com.sinoll.home.data.VideoCache;
 import com.sinoll.home.databinding.FragmentVideoBinding;
 import com.sinoll.home.databinding.ItemVideoBinding;
+import com.sinoll.home.ui.AppBarCollapse;
 import com.sinoll.home.ui.FeedState;
 import com.sinoll.home.ui.PagedFeed;
 import com.sinoll.home.ui.PostActionRouter;
@@ -44,7 +41,6 @@ import java.util.function.Consumer;
 public class VideoFragment extends Fragment implements PagedFeed.Ui {
 
     private static final int PER_PAGE = 10;
-    private static final int TOP_ZONE_DP = 100;
     /** 落位之后往后预取的视频条数，和 VideoCache 的保留上限对齐。 */
     private static final int PREFETCH = 8;
 
@@ -70,11 +66,11 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
         binding.recycler.setLayoutManager(
                 new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
         binding.recycler.setAdapter(adapter);
+        AppBarCollapse.attach(binding.recycler, this);
         snapHelper = new PagerSnapHelper();
         snapHelper.attachToRecyclerView(binding.recycler);
         binding.recycler.addOnScrollListener(settleListener);
         binding.state.retry.setOnClickListener(view -> paged.retry());
-        installTopTapReveal();
         paged = new PagedFeed(binding.recycler, this::load, this);
         paged.refresh();
         return binding.getRoot();
@@ -205,34 +201,6 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
                 action.accept((VideoHolder) holder);
             }
         }
-    }
-
-    private void installTopTapReveal() {
-        float topZonePx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                TOP_ZONE_DP, getResources().getDisplayMetrics());
-        GestureDetector detector = new GestureDetector(requireContext(),
-                new GestureDetector.SimpleOnGestureListener() {
-                    @Override
-                    public boolean onSingleTapUp(MotionEvent e) {
-                        if (e.getRawY() > topZonePx) {
-                            return false;
-                        }
-                        if (getParentFragment() instanceof HomeFragment) {
-                            ((HomeFragment) getParentFragment()).revealTabsTemporarily();
-                        }
-                        if (getActivity() instanceof MainActivity) {
-                            ((MainActivity) getActivity()).revealChromeTemporarily();
-                        }
-                        return true;
-                    }
-                });
-        binding.recycler.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                detector.onTouchEvent(e);
-                return false;
-            }
-        });
     }
 
     @Override

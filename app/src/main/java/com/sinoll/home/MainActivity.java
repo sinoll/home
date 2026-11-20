@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                     contentContainer.getPaddingRight(), bottom);
             return WindowInsetsCompat.CONSUMED;
         });
-        getWindow().getDecorView().post(() -> setVideoImmersive(true));
+        getWindow().getDecorView().post(() -> setVideoImmersive(false));
 
         setSupportActionBar(binding.appBarMain.toolbar);
         // 标题栏状态只认 AppBarLayout 的真实偏移：列表在顶部下拉时栏是 Behavior 自己放出来的，
@@ -376,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
         binding.appBarMain.appBar.setExpanded(!collapsed, true);
     }
 
-    /** 进动态/图文页：标题栏直接是收起态，不做滑出动画，否则从视频页切回来会闪一下。 */
+    /** 进入首页子列表时直接收起标题栏，避免页面切换时闪烁。 */
     public void collapseBarForListPage() {
         if (binding == null || videoImmersive || barCollapsed) {
             return;

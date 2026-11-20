@@ -1,8 +1,6 @@
 package com.sinoll.home.ui.home;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,11 +19,8 @@ public class HomeFragment extends Fragment {
 
     private static final int[] TAB_TITLES = {R.string.tab_feed, R.string.tab_video, R.string.tab_article};
     private static final int POSITION_VIDEO = 1;
-    private static final long TABS_RESHOW_MS = 2200;
 
     private FragmentHomeBinding binding;
-    private final Handler hideHandler = new Handler(Looper.getMainLooper());
-    private final Runnable hideTabBarTask = this::hideTabBar;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -39,17 +34,13 @@ public class HomeFragment extends Fragment {
         pager.setCurrentItem(POSITION_VIDEO, false);
         pager.registerOnPageChangeCallback(pageChangeCallback);
 
-        // 恢复现场时页码可能是动态，这条 post 跑在恢复之后，不能再无条件把标签条和标题栏收掉
+        // 恢复现场时页码可能是动态，这条 post 跑在恢复之后，所有子页都保持标题栏收起态
         binding.getRoot().post(() -> {
             if (binding == null) {
                 return;
             }
-            if (binding.pager.getCurrentItem() == POSITION_VIDEO) {
-                hideTabBar();
-                applyVideoImmersive(true);
-            } else {
-                collapseBarForListPage();
-            }
+            applyVideoImmersive();
+            collapseBarForListPage();
         });
         return binding.getRoot();
     }
@@ -57,31 +48,12 @@ public class HomeFragment extends Fragment {
     private final ViewPager2.OnPageChangeCallback pageChangeCallback =
             new ViewPager2.OnPageChangeCallback() {
                 @Override
-                public void onPageScrollStateChanged(int state) {
-                    if (state == ViewPager2.SCROLL_STATE_DRAGGING && binding != null) {
-                        hideHandler.removeCallbacks(hideTabBarTask);
-                        showTabBar();
-                        revealChromeTemporarily();
-                    }
-                }
-
-                @Override
                 public void onPageSelected(int position) {
                     if (binding == null) {
                         return;
                     }
-                    if (position == POSITION_VIDEO) {
-                        hideHandler.removeCallbacks(hideTabBarTask);
-                        hideHandler.postDelayed(hideTabBarTask, TABS_RESHOW_MS);
-                    } else {
-                        hideHandler.removeCallbacks(hideTabBarTask);
-                        showTabBar();
-                    }
-                    applyVideoImmersive(position == POSITION_VIDEO);
-                    if (position != POSITION_VIDEO) {
-                        // 动态/图文进来不带标题栏，用户下滑时它才出现
-                        collapseBarForListPage();
-                    }
+                    applyVideoImmersive();
+                    collapseBarForListPage();
                 }
             };
 
@@ -91,55 +63,17 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void hideTabBar() {
-        if (binding == null || binding.tabLayout.getAlpha() == 0f) {
-            return;
-        }
-        binding.tabLayout.animate()
-                .alpha(0f)
-                .translationY(-binding.tabLayout.getHeight())
-                .setDuration(220)
-                .start();
-    }
-
-    private void showTabBar() {
-        if (binding == null) {
-            return;
-        }
-        binding.tabLayout.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(220)
-                .start();
-    }
-
-    public void revealTabsTemporarily() {
-        if (binding == null) {
-            return;
-        }
-        hideHandler.removeCallbacks(hideTabBarTask);
-        showTabBar();
-        hideHandler.postDelayed(hideTabBarTask, TABS_RESHOW_MS);
-    }
-
-    private void revealChromeTemporarily() {
+    private void applyVideoImmersive() {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).revealChromeTemporarily();
-        }
-    }
-
-    private void applyVideoImmersive(boolean videoPage) {
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).setVideoImmersive(videoPage);
+            ((MainActivity) getActivity()).setVideoImmersive(false);
         }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        hideHandler.removeCallbacks(hideTabBarTask);
         binding.pager.unregisterOnPageChangeCallback(pageChangeCallback);
-        applyVideoImmersive(false);
+        applyVideoImmersive();
         binding = null;
     }
 
