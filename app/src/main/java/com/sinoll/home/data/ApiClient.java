@@ -76,7 +76,12 @@ public final class ApiClient {
     public enum Failure {
         NONE,
         NETWORK,
-        TIMEOUT
+        TIMEOUT,
+        /** 上传前置校验拦下的文件：不值得占一次请求，也不该让用户等服务器回 422。 */
+        TOO_LARGE,
+        BAD_TYPE,
+        /** 内容 URI 读不出来：文件已被删除或授权失效。 */
+        UNREADABLE
     }
 
     public static String absoluteUrl(String path) {
@@ -101,12 +106,59 @@ public final class ApiClient {
         send("GET", path, null, token, callback);
     }
 
+    public static void delete(String path, String token, Callback callback) {
+        send("DELETE", path, null, token, callback);
+    }
+
+    /** 改状态用不到 PUT：服务端把 PUT 和 PATCH 都按部分更新处理，同一套语义不必留两个入口。 */
     private static void send(String method, String path, JSONObject payload,
                              String token, Callback callback) {
         WORKERS.execute(() -> {
             Response response = execute(method, absoluteUrl(path), payload, token);
             MAIN.post(() -> callback.onResult(response));
         });
+    }
+
+    /** 上传走自己的连接（超时和请求体都不一样），但要共用这套线程与主线程回调。 */
+    interface Job {
+        Response run();
+    }
+
+    static void async(Job job, Callback callback) {
+        WORKERS.execute(() -> {
+            Response response = job.run();
+            MAIN.post(() -> callback.onResult(response));
+        });
+    }
+
+    static void onMain(Runnable task) {
+        MAIN.post(task);
+    }
+
+    static HttpURLConnection open(String method, String path, String token) throws IOException {
+        HttpURLConnection conn =
+                (HttpURLConnection) new URL(absoluteUrl(path)).openConnection();
+        conn.setRequestMethod(method);
+        conn.setInstanceFollowRedirects(false);
+        conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+        conn.setReadTimeout(READ_TIMEOUT_MS);
+        conn.setRequestProperty("Accept", "application/json");
+        if (token != null && !token.isEmpty()) {
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+        }
+        return conn;
+    }
+
+    static Response read(HttpURLConnection conn) {
+        try {
+            int status = conn.getResponseCode();
+            String raw = readFully(status >= 400 ? conn.getErrorStream() : conn.getInputStream());
+            return fromRaw(raw, status);
+        } catch (SocketTimeoutException e) {
+            return failure(Failure.TIMEOUT, 0);
+        } catch (IOException e) {
+            return failure(Failure.NETWORK, 0);
+        }
     }
 
     private static Response execute(String method, String url, JSONObject payload, String token) {
@@ -130,25 +182,7 @@ public final class ApiClient {
                     out.write(body);
                 }
             }
-
-            int status = conn.getResponseCode();
-            String raw = readFully(status >= 400 ? conn.getErrorStream() : conn.getInputStream());
-            JSONObject json = null;
-            try {
-                json = new JSONObject(raw);
-            } catch (JSONException ignored) {
-                // 网关或静态资源返回的非 JSON 响应，落到 status 上
-            }
-            if (json == null) {
-                return failure(status >= 400 ? Failure.NONE : Failure.NETWORK, status);
-            }
-            JSONObject data = json.optJSONObject("data");
-            int code = json.optInt("code", status);
-            String message = json.optString("message");
-            boolean ok = status >= 200 && status < 300 && code >= 200 && code < 300;
-            return new Response(ok, code, message, data, Failure.NONE);
-        } catch (SocketTimeoutException e) {
-            return failure(Failure.TIMEOUT, 0);
+            return read(conn);
         } catch (IOException e) {
             return failure(Failure.NETWORK, 0);
         } finally {
@@ -156,6 +190,24 @@ public final class ApiClient {
                 conn.disconnect();
             }
         }
+    }
+
+    /** {code,message,data} 的统一拆包：非 JSON 响应（网关、静态页）只落到 status 上。 */
+    static Response fromRaw(String raw, int status) {
+        JSONObject json = null;
+        try {
+            json = new JSONObject(raw);
+        } catch (JSONException ignored) {
+            // 网关或静态资源返回的非 JSON 响应
+        }
+        if (json == null) {
+            return failure(status >= 400 ? Failure.NONE : Failure.NETWORK, status);
+        }
+        JSONObject data = json.optJSONObject("data");
+        int code = json.optInt("code", status);
+        String message = json.optString("message");
+        boolean ok = status >= 200 && status < 300 && code >= 200 && code < 300;
+        return new Response(ok, code, message, data, Failure.NONE);
     }
 
     /** 传输层不拼用户可见文案，交给界面对应 string 资源，避免文案两处维护。 */

@@ -23,10 +23,12 @@ import com.sinoll.home.databinding.FragmentSearchBinding;
 import com.sinoll.home.databinding.ItemSearchBinding;
 import com.sinoll.home.ui.FeedState;
 import com.sinoll.home.ui.PagedFeed;
+import com.sinoll.home.ui.PostActionRouter;
 import com.sinoll.home.ui.PostFormat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /** 搜索结果页：GET /search 的分页列表，顶部按内容类型筛选。 */
 public class SearchFragment extends Fragment implements PagedFeed.Ui {
@@ -46,7 +48,7 @@ public class SearchFragment extends Fragment implements PagedFeed.Ui {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentSearchBinding.inflate(inflater, container, false);
         state = new FeedState(binding.state, false);
-        adapter = new SearchAdapter();
+        adapter = new SearchAdapter(new PostActionRouter(requireContext())::onOpen);
         binding.recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recycler.setAdapter(adapter);
         binding.state.retry.setOnClickListener(view -> paged.retry());
@@ -163,6 +165,11 @@ public class SearchFragment extends Fragment implements PagedFeed.Ui {
     private static class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.VH> {
 
         private final List<Post> items = new ArrayList<>();
+        private final Consumer<Post> open;
+
+        SearchAdapter(Consumer<Post> open) {
+            this.open = open;
+        }
 
         void addAll(List<Post> posts) {
             int start = items.size();
@@ -192,6 +199,7 @@ public class SearchFragment extends Fragment implements PagedFeed.Ui {
             holder.binding.author.setText(post.authorName);
             holder.binding.time.setText(PostFormat.time(context, post.createdAtMillis));
             bindTexts(holder.binding, post);
+            holder.binding.getRoot().setOnClickListener(view -> open.accept(post));
         }
 
         /** 动态的标题就是正文截断，图集的说明首行往往重复标题，都只留一份。 */

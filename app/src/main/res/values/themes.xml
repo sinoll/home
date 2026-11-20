@@ -17,6 +17,14 @@
 
     <style name="Theme.Home.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <!-- 发布页与详情页：内容型页面走白底深字，状态栏跟着翻成浅色 -->
+    <style name="Theme.Home.Content" parent="Theme.Home.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+    </style>
+
     <!-- 登录/注册/找回密码：Bridge 主题保留 AppCompat 行为，同时启用 Material 输入框 -->
     <style name="Theme.Home.Auth" parent="Theme.MaterialComponents.Light.NoActionBar.Bridge">
         <item name="colorPrimary">@color/brand_primary</item>

@@ -15,7 +15,9 @@ public final class Message {
     public final String content;
     public final String senderName;
     public final String senderAvatarUrl;
+    public final String senderUsername;
     public final String recipientName;
+    public final String recipientUsername;
     /** 提及消息的来源内容，私信没有。 */
     public final String sourceType;
     public final int sourceId;
@@ -38,12 +40,19 @@ public final class Message {
         JSONObject recipient = orEmpty(item.optJSONObject("recipient"));
         senderName = displayName(sender);
         recipientName = displayName(recipient);
+        senderUsername = sender.optString("username");
+        recipientUsername = recipient.optString("username");
         senderAvatarUrl = ApiClient.absoluteUrl(sender.optString("avatar_url"));
         mine = String.valueOf(optId(sender)).equals(myUserId);
     }
 
     public static Message fromJson(JSONObject item, String myUserId) {
         return new Message(item, myUserId);
+    }
+
+    /** 回话永远发给「另一边的这个人」：我收到的找发送人，我发出的找收件人。 */
+    public String counterpartUsername() {
+        return mine ? recipientUsername : senderUsername;
     }
 
     public boolean isMention() {

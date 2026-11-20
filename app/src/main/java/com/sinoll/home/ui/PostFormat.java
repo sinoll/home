@@ -101,6 +101,12 @@ public final class PostFormat {
                 return context.getString(R.string.error_timeout);
             case NETWORK:
                 return context.getString(R.string.error_network);
+            case TOO_LARGE:
+                return context.getString(R.string.error_upload_too_large);
+            case BAD_TYPE:
+                return context.getString(R.string.error_upload_bad_type);
+            case UNREADABLE:
+                return context.getString(R.string.error_upload_unreadable);
             default:
                 break;
         }

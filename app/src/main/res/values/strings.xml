@@ -12,7 +12,6 @@
     <string name="menu_home">Home</string>
     <string name="menu_search">搜索</string>
     <string name="menu_gallery">相册</string>
-    <string name="menu_slideshow">Slideshow</string>
 
     <string name="tab_feed">动态</string>
     <string name="tab_video">视频</string>
@@ -116,6 +115,93 @@
     <string name="error_timeout">请求超时，请稍后重试</string>
     <string name="error_server">服务异常（%1$d），请稍后重试</string>
     <string name="error_rate_limited">操作过于频繁，请稍后再试</string>
+
+    <!-- 发布与修改 -->
+    <string name="title_compose">发布</string>
+    <string name="title_detail">内容</string>
+    <string name="title_compose_edit">编辑</string>
+    <string name="menu_mine">我的内容</string>
+    <string name="hint_compose_moment">写下此刻的想法…</string>
+    <string name="hint_compose_title">图集标题</string>
+    <string name="hint_compose_title_video">视频标题</string>
+    <string name="hint_compose_title_blog">博客标题</string>
+    <string name="hint_compose_note">图片说明（选填）</string>
+    <string name="hint_compose_desc">视频简介</string>
+    <string name="hint_compose_content">正文…</string>
+    <string name="label_compose_pics">配图</string>
+    <string name="label_compose_pics_blog">正文配图</string>
+    <string name="label_compose_images">图片</string>
+    <string name="label_compose_video">视频</string>
+    <string name="label_compose_cover">封面</string>
+    <string name="label_compose_cate">分类</string>
+    <string name="cate_none">未分类</string>
+    <string name="label_visibility">谁可以看</string>
+    <string name="vis_public">公开</string>
+    <string name="vis_members">注册用户</string>
+    <string name="vis_private">仅自己</string>
+    <string name="action_draft">存草稿</string>
+    <string name="action_publish">发布</string>
+    <string name="action_update">保存修改</string>
+    <string name="action_delete">删除</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_add_image">添加</string>
+    <string name="action_video_pick">相册选视频</string>
+    <string name="action_video_record">拍摄</string>
+    <string name="action_cover_pick">选择封面</string>
+    <string name="action_cover_replace">更换封面</string>
+    <string name="compose_hint_topic">#话题# 会自动变成标签</string>
+    <string name="compose_hint_mention">输入 @ 提及某人</string>
+    <string name="compose_hint_mention_quiet">草稿和仅自己可见不会通知对方</string>
+    <string name="compose_empty_text">写点什么，或至少配一张图</string>
+    <string name="compose_need_images">图集至少要有一张图</string>
+    <string name="compose_need_title">给图集起个标题</string>
+    <string name="compose_need_video">先选一段视频，或现场拍一条</string>
+    <string name="compose_need_desc">给视频写句简介</string>
+    <string name="compose_need_content">博客要有正文</string>
+    <string name="compose_limit">最多 %1$d 张</string>
+    <string name="compose_uploading">正在上传 %1$d 张图片…</string>
+    <string name="compose_uploading_video">正在上传视频，别退出这个页面…</string>
+    <string name="compose_uploading_cover">正在上传封面…</string>
+    <string name="compose_video_ready">已选 %1$s · 时长与方向由服务器识别</string>
+    <string name="compose_video_current">%1$s · %2$d 秒 · %3$s</string>
+    <string name="video_landscape">横屏</string>
+    <string name="video_portrait">竖屏</string>
+    <string name="video_cover_auto">封面取自视频抽帧，可换成自备图</string>
+    <string name="video_cover_wait">选好视频后自动抽帧，也可自备封面</string>
+    <string name="video_cover_none">服务器没能从这条视频抽出帧，建议自备封面</string>
+    <string name="video_cover_blog">封面选填，留空按正文首图生成</string>
+    <string name="video_record_unavailable">这台设备没有可用的相机应用</string>
+    <string name="video_record_missing">相机没有交回录好的视频</string>
+    <string name="compose_publishing">正在提交…</string>
+    <string name="compose_published">已发布</string>
+    <string name="compose_draft_saved">草稿已保存</string>
+    <string name="compose_updated">修改已保存</string>
+    <string name="compose_deleted">已删除</string>
+    <string name="compose_delete_confirm">删除后这条内容和它独占的图片都会回收，确定吗？</string>
+    <string name="error_upload_too_large">单张图片不能超过 20 MB</string>
+    <string name="error_upload_bad_type">只支持 jpg、jpeg、png、gif、webp</string>
+    <string name="error_upload_unreadable">选中的文件读不到了，请重新选择</string>
+    <string name="mention_of">%1$s 的动态</string>
+    <string name="mention_message_to">私信 %1$s</string>
+
+    <!-- 私信 -->
+    <string name="hint_message_to">发给谁…</string>
+    <string name="hint_message_body">想说的话…</string>
+    <string name="action_message_new">发起私信</string>
+    <string name="message_sent">已发送</string>
+    <string name="message_empty">先写好要说的话</string>
+    <string name="message_need_recipient">选一位收件人</string>
+    <string name="state_no_users">没有匹配的用户</string>
+    <string name="state_no_mine">还没有发布过内容</string>
+    <string name="state_need_sign_in">登录后查看专属内容与消息</string>
+
+    <!-- 内容详情 -->
+    <string name="state_detail_missing">内容已被删除或你没有权限查看</string>
+    <string name="label_draft">草稿</string>
+    <string name="label_private">仅自己可见</string>
+    <string name="label_members">注册用户可见</string>
+    <string name="action_publish_draft">发布这条草稿</string>
     <string name="large_text">
         "Material is the metaphor.\n\n"
 

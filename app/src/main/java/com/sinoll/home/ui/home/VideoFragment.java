@@ -31,6 +31,7 @@ import com.sinoll.home.ui.PagedFeed;
 import com.sinoll.home.ui.PostActionRouter;
 import com.sinoll.home.ui.PostActions;
 import com.sinoll.home.ui.PostFormat;
+import com.sinoll.home.ui.compose.ComposeActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -56,13 +57,15 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
 
     private boolean muted = true;
     private int snapped = -1;
+    /** 编辑器改动过内容才重取：这条流会跳回第一条，随便刷新代价太大。 */
+    private int seenGeneration = ComposeActivity.contentGeneration;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentVideoBinding.inflate(inflater, container, false);
         state = new FeedState(binding.state, true);
-        actions = new PostActionRouter(this);
+        actions = new PostActionRouter(requireContext());
         adapter = new VideoAdapter();
         binding.recycler.setLayoutManager(
                 new LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false));
@@ -80,6 +83,11 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
     @Override
     public void onResume() {
         super.onResume();
+        if (seenGeneration != ComposeActivity.contentGeneration) {
+            seenGeneration = ComposeActivity.contentGeneration;
+            paged.refresh();
+            return;
+        }
         VideoHolder current = currentHolder();
         if (current != null) {
             current.resume();

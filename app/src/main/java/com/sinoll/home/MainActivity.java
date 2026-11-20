@@ -33,10 +33,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.sinoll.home.data.AuthApi;
 import com.sinoll.home.data.AuthSession;
 import com.sinoll.home.data.ImageLoader;
+import com.sinoll.home.data.Post;
 import com.sinoll.home.databinding.ActivityMainBinding;
 import com.sinoll.home.databinding.NavHeaderMainBinding;
 import com.sinoll.home.ui.MessageNotifier;
 import com.sinoll.home.ui.auth.LoginActivity;
+import com.sinoll.home.ui.compose.ComposeActivity;
 import com.sinoll.home.ui.search.SearchViewModel;
 
 public class MainActivity extends AppCompatActivity {
@@ -87,13 +89,14 @@ public class MainActivity extends AppCompatActivity {
                 binding.appBarMain.toolbar.setAlpha((range + verticalOffset) / (float) range);
             }
         });
-        binding.appBarMain.fab.setOnClickListener(view -> openMessages());
+        binding.appBarMain.fab.setOnClickListener(view -> openCompose());
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_search, R.id.nav_gallery, R.id.nav_slideshow)
+                R.id.nav_home, R.id.nav_search, R.id.nav_gallery,
+                R.id.nav_messages, R.id.nav_mine)
                 .setDrawerLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -115,6 +118,15 @@ public class MainActivity extends AppCompatActivity {
         }
         Navigation.findNavController(this, R.id.nav_host_fragment_content_main)
                 .navigate(R.id.nav_messages);
+    }
+
+    /** 发布默认落在动态上，图集在编辑器里换一档就行。 */
+    private void openCompose() {
+        if (!AuthSession.get(this).isSignedIn()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+        startActivity(ComposeActivity.composeIntent(this, Post.TYPE_MOMENT));
     }
 
     private void setupSearchBar() {

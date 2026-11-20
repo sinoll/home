@@ -91,10 +91,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:contentDescription="@string/action_messages"
+        android:contentDescription="@string/title_compose"
         app:backgroundTint="@color/white"
         app:tint="@color/brand_primary"
-        app:maxImageSize="64dp"
-        app:srcCompat="@drawable/ic_message_my" />
+        app:maxImageSize="34dp"
+        app:srcCompat="@drawable/ic_add" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -35,18 +35,6 @@ public final class ArticleCard {
         bindActions(post);
     }
 
-    /** 图集的说明首行往往就是标题，重复了就不再占一行。 */
-    private void bindSummary(Post post) {
-        String detail = post.body == null ? "" : post.body.trim();
-        int lineEnd = detail.indexOf('\n');
-        String firstLine = (lineEnd < 0 ? detail : detail.substring(0, lineEnd)).trim();
-        if (TextUtils.equals(firstLine, post.title)) {
-            detail = lineEnd < 0 ? "" : detail.substring(lineEnd + 1).trim();
-        }
-        binding.summary.setText(detail);
-        binding.summary.setVisibility(detail.isEmpty() ? View.GONE : View.VISIBLE);
-    }
-
     private void bindCover(Post post) {
         if (post.isImages()) {
             binding.badge.setVisibility(View.VISIBLE);
@@ -76,6 +64,19 @@ public final class ArticleCard {
                 view -> actions.onComment(post, () -> renderCommentCount(post)));
         binding.share.setVisibility(post.isShareable() ? View.VISIBLE : View.GONE);
         binding.share.setOnClickListener(view -> actions.onShare(post));
+        binding.getRoot().setOnClickListener(view -> actions.onOpen(post));
+    }
+
+    /** 图集的说明首行往往就是标题，重复了就不再占一行。 */
+    private void bindSummary(Post post) {
+        String detail = post.body == null ? "" : post.body.trim();
+        int lineEnd = detail.indexOf('\n');
+        String firstLine = (lineEnd < 0 ? detail : detail.substring(0, lineEnd)).trim();
+        if (TextUtils.equals(firstLine, post.title)) {
+            detail = lineEnd < 0 ? "" : detail.substring(lineEnd + 1).trim();
+        }
+        MentionFormat.bind(binding.summary, detail, actions::onMention);
+        binding.summary.setVisibility(detail.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     /** 和点赞一个规矩：没人评论时不留一个 0 在按钮边上。 */

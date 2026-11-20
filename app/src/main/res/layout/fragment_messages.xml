@@ -1,18 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler"
+    <TextView
+        android:id="@+id/messageNew"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/btn_compose_ghost"
+        android:drawablePadding="6dp"
+        android:gravity="center_vertical"
+        android:paddingLeft="14dp"
+        android:paddingTop="8dp"
+        android:paddingRight="14dp"
+        android:paddingBottom="8dp"
+        android:text="@string/action_message_new"
+        android:textColor="@color/brand_primary"
+        android:textSize="13sp"
+        app:drawableStartCompat="@drawable/ic_message"
+        app:drawableTint="@color/brand_primary" />
+
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingTop="6dp"
-        android:paddingBottom="76dp"
-        android:scrollbars="none" />
+        android:layout_height="match_parent">
 
-    <include
-        android:id="@+id/state"
-        layout="@layout/view_feed_state" />
-</FrameLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="6dp"
+            android:paddingBottom="24dp"
+            android:scrollbars="none" />
+
+        <include
+            android:id="@+id/state"
+            layout="@layout/view_feed_state" />
+    </FrameLayout>
+</LinearLayout>

@@ -1,6 +1,7 @@
 package com.sinoll.home.ui.messages;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.sinoll.home.R;
+import com.sinoll.home.data.AuthSession;
 import com.sinoll.home.data.Message;
 import com.sinoll.home.data.MessageApi;
 import com.sinoll.home.databinding.FragmentMessagesBinding;
@@ -20,6 +22,8 @@ import com.sinoll.home.ui.FeedState;
 import com.sinoll.home.ui.MessageRow;
 import com.sinoll.home.ui.PagedFeed;
 import com.sinoll.home.ui.PostFormat;
+import com.sinoll.home.ui.auth.LoginActivity;
+import com.sinoll.home.ui.detail.PostDetailActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +37,7 @@ public class MessagesFragment extends Fragment implements PagedFeed.Ui {
     private FeedState state;
     private MessageAdapter adapter;
     private PagedFeed paged;
+    private boolean firstResume = true;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -43,6 +48,7 @@ public class MessagesFragment extends Fragment implements PagedFeed.Ui {
         binding.recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recycler.setAdapter(adapter);
         binding.state.retry.setOnClickListener(view -> paged.retry());
+        binding.messageNew.setOnClickListener(view -> newMessage());
         paged = new PagedFeed(binding.recycler, this::load, this);
         paged.refresh();
         return binding.getRoot();
@@ -57,13 +63,47 @@ public class MessagesFragment extends Fragment implements PagedFeed.Ui {
         paged = null;
     }
 
-    /** 已读和不是我收的都无需请求；接口幂等，重复点也只是再确认一次。 */
+    /**
+     * 点开一条消息：提及去看来源内容，私信直接回到对方。
+     * 已读和不是我收的都无需请求；接口幂等，重复点也只是再确认一次。
+     */
     private void open(Message message) {
+        Context context = requireContext();
+        if (message.isMention() && message.sourceId > 0) {
+            context.startActivity(
+                    PostDetailActivity.intent(context, message.sourceType, message.sourceId));
+        } else {
+            context.startActivity(
+                    PrivateMessageActivity.intent(context, message.counterpartUsername()));
+        }
+        markRead(message);
+    }
+
+    /** 从私信或详情页回来重取一次：刚发出去的那半边要出现在列表里。 */
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (firstResume) {
+            firstResume = false;
+            return;
+        }
+        paged.refresh();
+    }
+
+    private void newMessage() {
+        Context context = requireContext();
+        if (!AuthSession.get(context).isSignedIn()) {
+            context.startActivity(new Intent(context, LoginActivity.class));
+            return;
+        }
+        context.startActivity(PrivateMessageActivity.intent(context, ""));
+    }
+
+    private void markRead(Message message) {
         if (message.read || message.mine) {
             return;
         }
-        Context context = getContext();
-        MessageApi.markRead(context, message.id, response -> {
+        MessageApi.markRead(requireContext(), message.id, response -> {
             if (binding == null || !response.success) {
                 return;
             }
@@ -73,6 +113,10 @@ public class MessagesFragment extends Fragment implements PagedFeed.Ui {
 
     private void load(int page, PagedFeed.Result result) {
         Context context = getContext();
+        if (!AuthSession.get(context).isSignedIn()) {
+            result.onResult(0, false, null);
+            return;
+        }
         MessageApi.load(context, page, PER_PAGE, (messages, current, totalPages, response) -> {
             if (binding == null) {
                 return;
@@ -93,12 +137,17 @@ public class MessagesFragment extends Fragment implements PagedFeed.Ui {
 
     @Override
     public void onFirstLoading() {
-        state.showLoading(R.string.state_loading);
+        if (AuthSession.get(requireContext()).isSignedIn()) {
+            state.showLoading(R.string.state_loading);
+            return;
+        }
+        state.showMessage(R.string.state_need_sign_in);
     }
 
     @Override
     public void onEmpty() {
-        state.showMessage(R.string.state_empty_messages);
+        state.showMessage(AuthSession.get(requireContext()).isSignedIn()
+                ? R.string.state_empty_messages : R.string.state_need_sign_in);
     }
 
     @Override

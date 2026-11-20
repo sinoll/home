@@ -34,6 +34,7 @@ public final class FeedCard {
                 view -> actions.onComment(post, () -> renderCommentCount(post)));
         binding.share.setVisibility(post.isShareable() ? View.VISIBLE : View.GONE);
         binding.share.setOnClickListener(view -> actions.onShare(post));
+        binding.getRoot().setOnClickListener(view -> actions.onOpen(post));
     }
 
     /** 零评论只留图标，数字等真有人评论了再占位。 */
@@ -55,7 +56,7 @@ public final class FeedCard {
     /** 纯图片动态的 text 只剩空白，不留一行高度。 */
     private void bindContent(Post post) {
         String text = post.body == null ? "" : post.body.trim();
-        binding.content.setText(text);
+        MentionFormat.bind(binding.content, text, actions::onMention);
         binding.content.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
     }
 

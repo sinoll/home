@@ -24,6 +24,7 @@ import com.sinoll.home.ui.PagedFeed;
 import com.sinoll.home.ui.PostActionRouter;
 import com.sinoll.home.ui.PostActions;
 import com.sinoll.home.ui.PostFormat;
+import com.sinoll.home.ui.compose.ComposeActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,13 +50,15 @@ public class ArticleFragment extends Fragment implements PagedFeed.Ui {
     private FeedState state;
     private ArticleAdapter adapter;
     private PagedFeed paged;
+    /** 编辑器改动过内容才重取。 */
+    private int seenGeneration = ComposeActivity.contentGeneration;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentArticleBinding.inflate(inflater, container, false);
         state = new FeedState(binding.state, false);
-        adapter = new ArticleAdapter(new PostActionRouter(this));
+        adapter = new ArticleAdapter(new PostActionRouter(requireContext()));
         binding.recycler.setLayoutManager(
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         binding.recycler.setAdapter(adapter);
@@ -64,6 +67,15 @@ public class ArticleFragment extends Fragment implements PagedFeed.Ui {
         paged = new PagedFeed(binding.recycler, this::load, this);
         paged.refresh();
         return binding.getRoot();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (seenGeneration != ComposeActivity.contentGeneration) {
+            seenGeneration = ComposeActivity.contentGeneration;
+            paged.refresh();
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.sinoll.home.data;
 import android.content.Context;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -40,6 +41,19 @@ public final class MessageApi {
                             data.optInt("total_pages"),
                             response);
                 });
+    }
+
+    /** 私信正文上限 5000 字，比评论的 500 宽得多，别把两边的校验抄混。 */
+    public static void send(Context context, String recipientUsername, String content,
+                            ApiClient.Callback callback) {
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("recipient_username", recipientUsername);
+            payload.put("content", content);
+        } catch (JSONException impossible) {
+            throw new IllegalStateException(impossible);
+        }
+        ApiClient.post("/messages", payload, AuthSession.get(context).token(), callback);
     }
 
     /** 接口是幂等的，重复点同一条也只改一次状态。 */

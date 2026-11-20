@@ -11,7 +11,6 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
 
 import com.sinoll.home.R;
 import com.sinoll.home.data.CommentApi;
@@ -21,8 +20,7 @@ import com.sinoll.home.databinding.DialogCommentBinding;
 /** 底部评论输入条：发一条顶级评论，成功就收起。 */
 public final class CommentComposer {
 
-    public static void show(Fragment host, Post post, Runnable onPublished) {
-        Context context = host.requireContext();
+    public static void show(Context context, Post post, Runnable onPublished) {
         DialogCommentBinding binding = DialogCommentBinding.inflate(
                 LayoutInflater.from(context));
         AlertDialog dialog = new AlertDialog.Builder(context)

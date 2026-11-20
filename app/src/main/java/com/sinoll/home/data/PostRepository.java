@@ -23,9 +23,31 @@ public final class PostRepository {
         void onPage(List<Post> posts, int page, int totalPages, ApiClient.Response response);
     }
 
+    /**
+     * 公开列表。带令牌时接口会把作者自己未发布的内容也排进来，这里统一滤掉：
+     * 草稿只在「我的内容」里露面。
+     */
     public static void load(Context context, String type, int page, int perPage,
                            PageCallback callback) {
-        request("/" + type + "?page=" + page + "&per_page=" + perPage, context, page, callback);
+        request("/" + type + "?page=" + page + "&per_page=" + perPage, context, page,
+                (posts, current, totalPages, response) -> {
+                    List<Post> published = new ArrayList<>();
+                    for (Post post : posts) {
+                        if (post.status != 0) {
+                            published.add(post);
+                        }
+                    }
+                    callback.onPage(published, current, totalPages, response);
+                });
+    }
+
+    /**
+     * 某人创建的内容。列表接口没有 status 过滤参数，草稿靠调用方按 {@link Post#status} 自己筛。
+     */
+    public static void loadByAuthor(Context context, String type, String userId, int page,
+                                    int perPage, PageCallback callback) {
+        request("/" + type + "?user_id=" + encode(userId) + "&page=" + page
+                + "&per_page=" + perPage, context, page, callback);
     }
 
     /** 全站搜索：type 传空表示不限类型，接口只搜已发布内容。 */
@@ -54,7 +76,7 @@ public final class PostRepository {
         });
     }
 
-    private static String encode(String value) {
+    static String encode(String value) {
         try {
             return URLEncoder.encode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {

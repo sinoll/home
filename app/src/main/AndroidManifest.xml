@@ -5,6 +5,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- targetSdk 30 的包可见性：不声明就查不到相机应用，拍摄入口只能永远灰着 -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.VIDEO_CAPTURE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -37,6 +44,20 @@
             android:name=".ui.auth.ForgotPasswordActivity"
             android:exported="false"
             android:theme="@style/Theme.Home.Auth"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.compose.ComposeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Home.Content"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.detail.PostDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Home.Content" />
+        <activity
+            android:name=".ui.messages.PrivateMessageActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Home.Content"
             android:windowSoftInputMode="adjustResize" />
     </application>
 

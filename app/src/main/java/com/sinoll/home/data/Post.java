@@ -38,6 +38,7 @@ public final class Post {
     public final boolean vertical;
     public final int imageCount;
     public final String authorName;
+    public final String authorId;
     public final String authorAvatarUrl;
     public final List<String> tags;
     /** 分类只有博客有。 */
@@ -73,6 +74,7 @@ public final class Post {
         }
         String nickname = author.optString("nickname");
         authorName = nickname.isEmpty() ? author.optString("username") : nickname;
+        authorId = String.valueOf(author.opt("id"));
         authorAvatarUrl = ApiClient.absoluteUrl(realPath(author.optString("avatar_url")));
         coverUrl = ApiClient.absoluteUrl(resolveCover(item));
         videoUrl = ApiClient.absoluteUrl(realPath(item.optString("video_url")));
@@ -93,6 +95,11 @@ public final class Post {
     /** 草稿和非公开内容分享出去只会得到 404，所以不给分享入口。 */
     public boolean isShareable() {
         return status == 1 && visibility == 2;
+    }
+
+    /** 改和删只对作者开放，服务端对别人的内容直接回 403。 */
+    public boolean isMine(String myUserId) {
+        return !myUserId.isEmpty() && authorId.equals(myUserId);
     }
 
     private String resolveCover(JSONObject item) {

@@ -23,6 +23,7 @@ import com.sinoll.home.ui.PagedFeed;
 import com.sinoll.home.ui.PostActionRouter;
 import com.sinoll.home.ui.PostActions;
 import com.sinoll.home.ui.PostFormat;
+import com.sinoll.home.ui.compose.ComposeActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,13 +37,15 @@ public class FeedFragment extends Fragment implements PagedFeed.Ui {
     private FeedState state;
     private FeedAdapter adapter;
     private PagedFeed paged;
+    /** 建页时的内容版本号，回来发现变了才重取，免得每次切前台都丢掉滚动位置。 */
+    private int seenGeneration = ComposeActivity.contentGeneration;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentFeedBinding.inflate(inflater, container, false);
         state = new FeedState(binding.state, false);
-        adapter = new FeedAdapter(new PostActionRouter(this));
+        adapter = new FeedAdapter(new PostActionRouter(requireContext()));
         binding.recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recycler.setAdapter(adapter);
         AppBarCollapse.attach(binding.recycler, this);
@@ -50,6 +53,15 @@ public class FeedFragment extends Fragment implements PagedFeed.Ui {
         paged = new PagedFeed(binding.recycler, this::load, this);
         paged.refresh();
         return binding.getRoot();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (seenGeneration != ComposeActivity.contentGeneration) {
+            seenGeneration = ComposeActivity.contentGeneration;
+            paged.refresh();
+        }
     }
 
     @Override
