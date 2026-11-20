@@ -18,11 +18,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "BASE_URL", '"http://192.168.10.10"'
-            buildConfigField "String", "SITE_URL", '"http://192.168.10.8"'
+            buildConfigField "String", "BASE_URL", '"http://192.168.8.10"'
+            buildConfigField "String", "SITE_URL", '"http://192.168.8.8"'
         }
         release {
-            buildConfigField "String", "BASE_URL", '"https://api.sinocd.cn/"'
+            buildConfigField "String", "BASE_URL", '"https://test.sinocd.cn/"'
             buildConfigField "String", "SITE_URL", '"https://sinocd.cn"'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

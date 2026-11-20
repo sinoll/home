@@ -23,7 +23,8 @@ local.properties
 
 # ===== Kotlin =====
 .kotlin/
-
+# ===== 截屏 =====
+.screenshots
 # ===== NDK / CMake =====
 .externalNativeBuild/
 .cxx/
