@@ -170,7 +170,11 @@ public final class PostDetailActivity extends AppCompatActivity {
         binding.commentDivider.setVisibility(visibility);
         binding.commentTitle.setVisibility(visibility);
         binding.commentList.setVisibility(visibility);
-        CommentList.render(getLayoutInflater(), binding.commentList, comments, actions::onMention);
+        CommentList.render(getLayoutInflater(), binding.commentList, comments,
+                actions::onMention, comment -> actions.onReply(post, comment, () -> {
+                    renderCounts();
+                    loadComments();
+                }));
     }
 
     private void bindAuthor(Post post) {

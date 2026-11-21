@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import com.sinoll.home.R;
 import com.sinoll.home.data.AuthSession;
+import com.sinoll.home.data.Comment;
 import com.sinoll.home.data.Post;
 import com.sinoll.home.ui.auth.LoginActivity;
 import com.sinoll.home.ui.detail.PostDetailActivity;
@@ -30,14 +31,32 @@ public final class PostActionRouter implements PostActions {
 
     @Override
     public void onComment(Post post, Runnable onCommented) {
-        if (!AuthSession.get(context).isSignedIn()) {
-            context.startActivity(new Intent(context, LoginActivity.class));
+        if (!requireSignIn()) {
             return;
         }
         CommentComposer.show(context, post, () -> {
             post.commentCount++;
             onCommented.run();
         });
+    }
+
+    @Override
+    public void onReply(Post post, Comment target, Runnable onReplied) {
+        if (!requireSignIn()) {
+            return;
+        }
+        CommentComposer.show(context, post, target, () -> {
+            post.commentCount++;
+            onReplied.run();
+        });
+    }
+
+    private boolean requireSignIn() {
+        if (!AuthSession.get(context).isSignedIn()) {
+            context.startActivity(new Intent(context, LoginActivity.class));
+            return false;
+        }
+        return true;
     }
 
     /** 分享的是前台网页地址：接口域名打不开给人看的页面。 */
@@ -59,10 +78,8 @@ public final class PostActionRouter implements PostActions {
     /** 私信要登录，和评论同一套兜底。 */
     @Override
     public void onMention(String username) {
-        if (!AuthSession.get(context).isSignedIn()) {
-            context.startActivity(new Intent(context, LoginActivity.class));
-            return;
+        if (requireSignIn()) {
+            context.startActivity(PrivateMessageActivity.intent(context, username));
         }
-        context.startActivity(PrivateMessageActivity.intent(context, username));
     }
 }

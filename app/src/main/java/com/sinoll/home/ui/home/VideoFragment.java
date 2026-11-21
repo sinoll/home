@@ -268,7 +268,7 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
             List<Comment> comments = response.success
                     ? Comment.list(response.data) : Collections.emptyList();
             CommentList.render(getLayoutInflater(), binding.commentList,
-                    comments, actions::onMention);
+                    comments, actions::onMention, this::replyInPanel);
             binding.commentEmpty.setVisibility(comments.isEmpty() ? View.VISIBLE : View.GONE);
         });
     }
@@ -279,18 +279,29 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
             return;
         }
         Post target = commentPost;
-        actions.onComment(target, () -> {
-            if (binding == null) {
-                return;
-            }
-            binding.commentTitle.setText(
-                    getString(R.string.comment_title_count, target.commentCount));
-            VideoHolder holder = holderFor(target);
-            if (holder != null) {
-                holder.renderCommentCount(target);
-            }
-            loadPanelComments();
-        });
+        actions.onComment(target, () -> refreshPanel(target));
+    }
+
+    /** 点某条评论的「回复」：弹窗里带上被回复的人，发完同样就地刷新。 */
+    private void replyInPanel(Comment comment) {
+        if (commentPost == null) {
+            return;
+        }
+        Post target = commentPost;
+        actions.onReply(target, comment, () -> refreshPanel(target));
+    }
+
+    private void refreshPanel(Post target) {
+        if (binding == null) {
+            return;
+        }
+        binding.commentTitle.setText(
+                getString(R.string.comment_title_count, target.commentCount));
+        VideoHolder holder = holderFor(target);
+        if (holder != null) {
+            holder.renderCommentCount(target);
+        }
+        loadPanelComments();
     }
 
     private VideoHolder holderFor(Post post) {

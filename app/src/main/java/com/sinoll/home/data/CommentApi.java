@@ -10,12 +10,15 @@ import org.json.JSONObject;
  */
 public final class CommentApi {
 
-    public static void send(Context context, int postId, String content,
+    public static void send(Context context, int postId, int parentId, String content,
                             ApiClient.Callback callback) {
         JSONObject payload = new JSONObject();
         try {
             payload.put("post_id", postId);
             payload.put("content", content);
+            if (parentId > 0) {
+                payload.put("parent_id", parentId);
+            }
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         }

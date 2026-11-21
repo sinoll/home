@@ -65,6 +65,21 @@
                     android:layout_marginStart="8dp"
                     android:textColor="@color/ink_faint"
                     android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/reply"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingLeft="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingRight="6dp"
+                    android:paddingBottom="2dp"
+                    android:text="@string/comment_reply_label"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <TextView

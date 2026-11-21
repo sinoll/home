@@ -22,15 +22,17 @@ import java.util.function.Consumer;
 public final class CommentList {
 
     public static void render(LayoutInflater inflater, LinearLayout container,
-                              List<Comment> comments, Consumer<String> onMention) {
+                              List<Comment> comments, Consumer<String> onMention,
+                              Consumer<Comment> onReply) {
         container.removeAllViews();
         for (Comment comment : comments) {
-            container.addView(row(inflater, container, comment, false, onMention));
+            container.addView(row(inflater, container, comment, false, onMention, onReply));
         }
     }
 
     public static View row(LayoutInflater inflater, ViewGroup parent, Comment comment,
-                           boolean reply, Consumer<String> onMention) {
+                           boolean reply, Consumer<String> onMention,
+                           Consumer<Comment> onReply) {
         ItemCommentBinding binding = ItemCommentBinding.inflate(inflater, parent, false);
         binding.avatarWrap.setVisibility(reply ? View.GONE : View.VISIBLE);
         binding.replies.setVisibility(View.GONE);
@@ -55,7 +57,8 @@ public final class CommentList {
         }
         if (!reply) {
             for (Comment child : comment.replies) {
-                binding.replies.addView(row(inflater, binding.replies, child, true, onMention));
+                binding.replies.addView(
+                        row(inflater, binding.replies, child, true, onMention, onReply));
             }
             binding.replies.setVisibility(comment.replies.isEmpty() ? View.GONE : View.VISIBLE);
             if (comment.hasMoreReplies && comment.replyCount > comment.replies.size()) {
@@ -63,6 +66,15 @@ public final class CommentList {
                 binding.moreReplies.setText(parent.getContext().getString(
                         R.string.comment_more_replies, comment.replyCount));
             }
+        }
+        // 被隐藏的节点只剩占位文字，回复它没有意义
+        if (onReply != null && !comment.hidden) {
+            binding.reply.setVisibility(View.VISIBLE);
+            View.OnClickListener listener = view -> onReply.accept(comment);
+            binding.reply.setOnClickListener(listener);
+            binding.getRoot().setOnClickListener(listener);
+        } else {
+            binding.reply.setVisibility(View.GONE);
         }
         return binding.getRoot();
     }

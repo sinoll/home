@@ -9,6 +9,17 @@
     android:paddingRight="16dp"
     android:paddingBottom="12dp">
 
+    <TextView
+        android:id="@+id/replyTo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/ink_faint"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -50,6 +50,8 @@
     <string name="comment_title_count">评论 %1$d</string>
     <string name="comment_hidden">该评论已隐藏</string>
     <string name="comment_reply_to">%1$s 回复 %2$s</string>
+    <string name="comment_reply_label">回复</string>
+    <string name="comment_reply_target">回复 @%1$s</string>
     <string name="comment_more_replies">查看全部 %1$d 条回复</string>
     <string name="comment_close">关闭评论</string>
     <string name="comment_none">还没有评论</string>
