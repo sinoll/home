@@ -186,6 +186,32 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <View
+                android:id="@+id/commentDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="20dp"
+                android:background="@color/input_stroke"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/commentTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/comment_list_title"
+                android:textColor="@color/ink_strong"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/commentList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
             <TextView
                 android:id="@+id/publishDraft"
                 android:layout_width="match_parent"

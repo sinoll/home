@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -15,13 +18,17 @@ import androidx.core.content.ContextCompat;
 import com.sinoll.home.R;
 import com.sinoll.home.data.ApiClient;
 import com.sinoll.home.data.AuthSession;
+import com.sinoll.home.data.Comment;
+import com.sinoll.home.data.CommentApi;
 import com.sinoll.home.data.ImageLoader;
 import com.sinoll.home.data.Post;
 import com.sinoll.home.data.PostApi;
 import com.sinoll.home.data.PostDetail;
 import com.sinoll.home.data.PostHtml;
 import com.sinoll.home.databinding.ActivityDetailBinding;
+import com.sinoll.home.databinding.ItemCommentBinding;
 import com.sinoll.home.ui.ChipRow;
+import com.sinoll.home.ui.CommentList;
 import com.sinoll.home.ui.InlineVideo;
 import com.sinoll.home.ui.MentionFormat;
 import com.sinoll.home.ui.PostActionRouter;
@@ -29,6 +36,7 @@ import com.sinoll.home.ui.PostFormat;
 import com.sinoll.home.ui.compose.ComposeActivity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -117,8 +125,13 @@ public final class PostDetailActivity extends AppCompatActivity {
         bindBlocks(detail);
         binding.tags.setItems(PostFormat.withHash(post.tags),
                 R.drawable.bg_chip_tag, R.color.brand_primary);
-        binding.comment.setOnClickListener(view -> actions.onComment(post, this::renderCounts));
+        binding.comment.setOnClickListener(view ->
+                actions.onComment(post, () -> {
+                    renderCounts();
+                    loadComments();
+                }));
         renderCounts();
+        loadComments();
         binding.share.setVisibility(post.isShareable() ? View.VISIBLE : View.GONE);
         binding.share.setOnClickListener(view -> actions.onShare(post));
 
@@ -134,6 +147,30 @@ public final class PostDetailActivity extends AppCompatActivity {
     private void renderCounts() {
         binding.commentCount.setText(PostFormat.count(this, post.commentCount));
         binding.commentCount.setVisibility(post.commentCount > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /** 有评论才拉列表；公开的已发布内容游客也能读，取失败就当没有，不打扰正文。 */
+    private void loadComments() {
+        if (post.commentCount <= 0) {
+            renderComments(Collections.emptyList());
+            return;
+        }
+        CommentApi.list(this, post.id, response -> {
+            if (binding == null) {
+                return;
+            }
+            renderComments(response.success
+                    ? Comment.list(response.data) : Collections.emptyList());
+        });
+    }
+
+    private void renderComments(List<Comment> comments) {
+        binding.commentList.removeAllViews();
+        int visibility = comments.isEmpty() ? View.GONE : View.VISIBLE;
+        binding.commentDivider.setVisibility(visibility);
+        binding.commentTitle.setVisibility(visibility);
+        binding.commentList.setVisibility(visibility);
+        CommentList.render(getLayoutInflater(), binding.commentList, comments, actions::onMention);
     }
 
     private void bindAuthor(Post post) {
@@ -188,6 +225,9 @@ public final class PostDetailActivity extends AppCompatActivity {
                 addImage(image.fileUrl, dp(720));
                 addCaption(image.title, image.altText);
             }
+            return;
+        } else if (Post.TYPE_BLOG.equals(detail.post.type) && !detail.html.isEmpty()) {
+            addBlock(newBodyView(detail.html));
             return;
         }
         for (PostHtml.Block block : PostHtml.blocks(detail.html)) {
@@ -245,6 +285,34 @@ public final class PostDetailActivity extends AppCompatActivity {
                     LinearLayout.LayoutParams.WRAP_CONTENT));
         }
         binding.blocks.addView(view);
+    }
+
+    /** 博客正文是带内联样式的净化 HTML，拆块渲染会丢光排版，交给 WebView 原样显示。 */
+    private WebView newBodyView(String html) {
+        WebView web = new WebView(this);
+        web.getSettings().setAllowFileAccess(false);
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, request.getUrl());
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+                return true;
+            }
+        });
+        web.loadDataWithBaseURL(ApiClient.BASE_URL + "/", styledHtml(html),
+                "text/html", "utf-8", null);
+        return web;
+    }
+
+    private static String styledHtml(String html) {
+        return "<!doctype html><html><head>"
+                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<style>body{margin:0;font:15px/1.75 sans-serif;color:#33333F;word-wrap:break-word}"
+                + "p{margin:0 0 10px}"
+                + "img{max-width:100%;height:auto;display:block;margin:8px 0;border-radius:8px}"
+                + "</style></head><body>" + html + "</body></html>";
     }
 
     /** 草稿发布走一次部分更新，只提交 status，正文原样留着。 */

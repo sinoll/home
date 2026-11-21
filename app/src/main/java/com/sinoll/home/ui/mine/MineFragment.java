@@ -221,7 +221,11 @@ public class MineFragment extends Fragment implements PagedFeed.Ui {
             Context context = holder.binding.getRoot().getContext();
             Post post = items.get(position);
             holder.binding.type.setText(PostFormat.typeLabel(context, post));
-            holder.binding.cover.setBackgroundResource(PostFormat.coverFallback(post.id));
+            boolean hasCover = post.coverUrl != null;
+            holder.binding.coverWrap.setVisibility(hasCover ? View.VISIBLE : View.GONE);
+            if (hasCover) {
+                holder.binding.cover.setBackgroundResource(PostFormat.coverFallback(post.id));
+            }
             ImageLoader.into(holder.binding.cover, post.coverUrl, PostFormat.dp(context, 92));
             // 作者就是自己，那一栏空出来说「这条现在是什么状态」
             holder.binding.author.setText(stateLabel(context, post));

@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.sinoll.home.R;
+import com.sinoll.home.data.Comment;
+import com.sinoll.home.data.CommentApi;
 import com.sinoll.home.data.ImageLoader;
 import com.sinoll.home.data.Post;
 import com.sinoll.home.data.PostRepository;
@@ -23,6 +25,7 @@ import com.sinoll.home.data.VideoCache;
 import com.sinoll.home.databinding.FragmentVideoBinding;
 import com.sinoll.home.databinding.ItemVideoBinding;
 import com.sinoll.home.ui.AppBarCollapse;
+import com.sinoll.home.ui.CommentList;
 import com.sinoll.home.ui.FeedState;
 import com.sinoll.home.ui.PagedFeed;
 import com.sinoll.home.ui.PostActionRouter;
@@ -32,11 +35,12 @@ import com.sinoll.home.ui.compose.ComposeActivity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * 视频 tab：GET /short_video 的竖滑流，落位的那条静音自动播，其余只留封面。
+ * 视频 tab：GET /short_video 的竖滑流，落位的那条带声音自动播，其余只留封面。
  */
 public class VideoFragment extends Fragment implements PagedFeed.Ui {
 
@@ -51,8 +55,11 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
     private PagerSnapHelper snapHelper;
     private PostActions actions;
 
-    private boolean muted = true;
+    private boolean muted;
     private int snapped = -1;
+    /** 半屏评论面板：打开时视频缩到上半屏，评论占下半屏。 */
+    private boolean panelOpen;
+    private Post commentPost;
     /** 编辑器改动过内容才重取：这条流会跳回第一条，随便刷新代价太大。 */
     private int seenGeneration = ComposeActivity.contentGeneration;
 
@@ -71,6 +78,8 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
         snapHelper.attachToRecyclerView(binding.recycler);
         binding.recycler.addOnScrollListener(settleListener);
         binding.state.retry.setOnClickListener(view -> paged.retry());
+        binding.commentClose.setOnClickListener(view -> closeComments());
+        binding.commentWrite.setOnClickListener(view -> composeForPanel());
         paged = new PagedFeed(binding.recycler, this::load, this);
         paged.refresh();
         return binding.getRoot();
@@ -132,6 +141,10 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
                         return;
                     }
                     adapter.addAll(posts);
+                    if (snapped < 0) {
+                        // 首次进 tab 没有滚动事件，落位那条也得自己起播
+                        binding.recycler.post(this::playSnapped);
+                    }
                     prefillFrom(Math.max(snapped, 0));
                     result.onResult(posts.size(), current < totalPages, null);
                 });
@@ -159,6 +172,10 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
         VideoHolder current = currentHolder();
         if (current != null) {
             current.play();
+        }
+        if (panelOpen) {
+            commentPost = adapter.postAt(position);
+            loadPanelComments();
         }
     }
 
@@ -201,6 +218,93 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
                 action.accept((VideoHolder) holder);
             }
         }
+    }
+
+    /** 评论图标开半屏评论：视频缩到上半屏，评论占下半屏，点关闭或点上半屏视频收起。 */
+    private void openComments(Post post) {
+        if (binding == null) {
+            return;
+        }
+        commentPost = post;
+        panelOpen = true;
+        binding.commentPanel.setVisibility(View.VISIBLE);
+        ViewGroup.LayoutParams params = binding.commentPanel.getLayoutParams();
+        params.height = binding.getRoot().getHeight() / 2;
+        binding.commentPanel.setLayoutParams(params);
+        binding.commentTitle.setText(getString(R.string.comment_title_count, post.commentCount));
+        applyCompact();
+        loadPanelComments();
+    }
+
+    private void closeComments() {
+        if (binding == null || !panelOpen) {
+            return;
+        }
+        panelOpen = false;
+        commentPost = null;
+        binding.commentPanel.setVisibility(View.GONE);
+        applyCompact();
+    }
+
+    private void applyCompact() {
+        forEachHolder(holder -> holder.setCompact(panelOpen));
+    }
+
+    private void loadPanelComments() {
+        if (binding == null || commentPost == null) {
+            return;
+        }
+        binding.commentList.removeAllViews();
+        binding.commentEmpty.setVisibility(View.GONE);
+        if (commentPost.commentCount <= 0) {
+            binding.commentEmpty.setVisibility(View.VISIBLE);
+            return;
+        }
+        int postId = commentPost.id;
+        CommentApi.list(requireContext(), postId, response -> {
+            if (binding == null || commentPost == null || commentPost.id != postId) {
+                return;
+            }
+            List<Comment> comments = response.success
+                    ? Comment.list(response.data) : Collections.emptyList();
+            CommentList.render(getLayoutInflater(), binding.commentList,
+                    comments, actions::onMention);
+            binding.commentEmpty.setVisibility(comments.isEmpty() ? View.VISIBLE : View.GONE);
+        });
+    }
+
+    /** 面板底部的输入条复用评论弹窗与登录兜底，发完就地刷计数和列表。 */
+    private void composeForPanel() {
+        if (commentPost == null) {
+            return;
+        }
+        Post target = commentPost;
+        actions.onComment(target, () -> {
+            if (binding == null) {
+                return;
+            }
+            binding.commentTitle.setText(
+                    getString(R.string.comment_title_count, target.commentCount));
+            VideoHolder holder = holderFor(target);
+            if (holder != null) {
+                holder.renderCommentCount(target);
+            }
+            loadPanelComments();
+        });
+    }
+
+    private VideoHolder holderFor(Post post) {
+        if (binding == null) {
+            return null;
+        }
+        for (int i = 0; i < binding.recycler.getChildCount(); i++) {
+            RecyclerView.ViewHolder holder = binding.recycler
+                    .getChildViewHolder(binding.recycler.getChildAt(i));
+            if (holder instanceof VideoHolder && ((VideoHolder) holder).post == post) {
+                return (VideoHolder) holder;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -275,6 +379,10 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
             return urls;
         }
 
+        Post postAt(int position) {
+            return position >= 0 && position < items.size() ? items.get(position) : null;
+        }
+
         @Override
         public int getItemCount() {
             return items.size();
@@ -310,12 +418,13 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
             });
             item.video.setOnErrorListener((mediaPlayer, what, extra) -> true);
             item.getRoot().setOnClickListener(view -> {
-                if (item.video.isPlaying()) {
-                    pause();
+                if (panelOpen) {
+                    closeComments();
                 } else {
-                    resume();
+                    togglePlay();
                 }
             });
+            item.play.setOnClickListener(view -> togglePlay());
             item.mute.setOnClickListener(view -> toggleMute());
         }
 
@@ -338,8 +447,7 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
             item.like.setText(PostFormat.count(context, value.likeCount));
             item.views.setText(PostFormat.count(context, value.views));
             renderCommentCount(value);
-            item.comment.setOnClickListener(
-                    view -> actions.onComment(value, () -> renderCommentCount(value)));
+            item.comment.setOnClickListener(view -> openComments(value));
             item.share.setVisibility(value.isShareable() ? View.VISIBLE : View.GONE);
             item.share.setOnClickListener(view -> actions.onShare(value));
             item.cover.setVisibility(View.VISIBLE);
@@ -349,15 +457,48 @@ public class VideoFragment extends Fragment implements PagedFeed.Ui {
             ImageLoader.into(item.cover, value.coverUrl, PostFormat.dp(context, 400));
             item.video.setCenterCrop(value.vertical);
             applyMute();
+            setCompact(panelOpen);
             if (shouldPlay) {
                 play();
             }
+        }
+
+        /** 半屏评论时视频区压到上半屏：竖版缩放，横版完整居中上移。 */
+        void setCompact(boolean compact) {
+            int height = binding == null ? 0 : binding.getRoot().getHeight();
+            ViewGroup.LayoutParams params = item.videoArea.getLayoutParams();
+            int target = compact && height > 0
+                    ? height / 2 : ViewGroup.LayoutParams.MATCH_PARENT;
+            if (params.height != target) {
+                params.height = target;
+                item.videoArea.setLayoutParams(params);
+            }
+            boolean crop = post != null && post.vertical && !compact;
+            item.video.setCenterCrop(crop);
+            item.cover.setScaleType(crop
+                    ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
+            item.cover.setVisibility(compact && prepared ? View.GONE : View.VISIBLE);
+            int overlay = compact ? View.GONE : View.VISIBLE;
+            item.scrim.setVisibility(overlay);
+            item.actionsRail.setVisibility(overlay);
+            item.infoBlock.setVisibility(overlay);
         }
 
         /** 右栏的计数一贯常驻，评论数也一样，没人评论就停在 0。 */
         private void renderCommentCount(Post value) {
             item.comment.setText(PostFormat.count(
                     item.getRoot().getContext(), value.commentCount));
+        }
+
+        /** 点视频本体：没起播就起播，播着就暂停，暂停了接着播。 */
+        void togglePlay() {
+            if (player == null) {
+                play();
+            } else if (item.video.isPlaying()) {
+                pause();
+            } else {
+                resume();
+            }
         }
 
         void play() {

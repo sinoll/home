@@ -8,8 +8,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.sinoll.home.R;
 import com.sinoll.home.data.ApiClient;
@@ -59,8 +59,7 @@ public class ArticleFragment extends Fragment implements PagedFeed.Ui {
         binding = FragmentArticleBinding.inflate(inflater, container, false);
         state = new FeedState(binding.state, false);
         adapter = new ArticleAdapter(new PostActionRouter(requireContext()));
-        binding.recycler.setLayoutManager(
-                new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+        binding.recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.recycler.setAdapter(adapter);
         AppBarCollapse.attach(binding.recycler, this);
         binding.state.retry.setOnClickListener(view -> paged.retry());

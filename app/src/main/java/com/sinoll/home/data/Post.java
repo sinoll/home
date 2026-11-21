@@ -75,9 +75,9 @@ public final class Post {
         String nickname = author.optString("nickname");
         authorName = nickname.isEmpty() ? author.optString("username") : nickname;
         authorId = String.valueOf(author.opt("id"));
-        authorAvatarUrl = ApiClient.absoluteUrl(realPath(author.optString("avatar_url")));
+        authorAvatarUrl = ApiClient.absoluteUrl(realPath(optPath(author, "avatar_url")));
         coverUrl = ApiClient.absoluteUrl(resolveCover(item));
-        videoUrl = ApiClient.absoluteUrl(realPath(item.optString("video_url")));
+        videoUrl = ApiClient.absoluteUrl(realPath(optPath(item, "video_url")));
     }
 
     public static Post fromJson(JSONObject item) {
@@ -103,11 +103,11 @@ public final class Post {
     }
 
     private String resolveCover(JSONObject item) {
-        String thumb = realPath(item.optString("thumb_url"));
+        String thumb = realPath(optPath(item, "thumb_url"));
         if (thumb != null) {
             return thumb;
         }
-        String cover = realPath(item.optString("cover_url"));
+        String cover = realPath(optPath(item, "cover_url"));
         if (cover != null) {
             return cover;
         }
@@ -115,10 +115,18 @@ public final class Post {
         if (images != null && images.length() > 0) {
             JSONObject first = images.optJSONObject(0);
             if (first != null) {
-                return realPath(first.optString("thumbnail_url"));
+                return realPath(optPath(first, "thumbnail_url"));
             }
         }
         return null;
+    }
+
+    /**
+     * Android 的 optString 会把 JSON null 变成字符串 "null"，拼上域名就成了一个
+     * 永远 404 的假地址，界面上表现为「没图却留着图区」。路径字段一律先判 isNull。
+     */
+    private static String optPath(JSONObject item, String key) {
+        return item.isNull(key) ? null : item.optString(key);
     }
 
     /** 空串与默认封面都算「没有图」，返回 null 让界面走渐变兜底。 */

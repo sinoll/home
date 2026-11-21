@@ -194,7 +194,12 @@ public class SearchFragment extends Fragment implements PagedFeed.Ui {
             Context context = holder.binding.getRoot().getContext();
             Post post = items.get(position);
             holder.binding.type.setText(PostFormat.typeLabel(context, post));
-            holder.binding.cover.setBackgroundResource(PostFormat.coverFallback(post.id));
+            // 没封面的内容连图位一起收起，留下的一块渐变会被读成默认占位图
+            boolean hasCover = post.coverUrl != null;
+            holder.binding.coverWrap.setVisibility(hasCover ? View.VISIBLE : View.GONE);
+            if (hasCover) {
+                holder.binding.cover.setBackgroundResource(PostFormat.coverFallback(post.id));
+            }
             ImageLoader.into(holder.binding.cover, post.coverUrl, PostFormat.dp(context, 92));
             holder.binding.author.setText(post.authorName);
             holder.binding.time.setText(PostFormat.time(context, post.createdAtMillis));

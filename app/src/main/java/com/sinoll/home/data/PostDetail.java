@@ -21,7 +21,7 @@ public final class PostDetail {
     private PostDetail(JSONObject item) {
         post = Post.fromJson(item);
         html = firstPresent(item, "content", "description");
-        caption = item.optString("caption");
+        caption = optText(item, "caption");
         images = readImages(item.optJSONArray("images"));
     }
 
@@ -35,12 +35,17 @@ public final class PostDetail {
 
     private static String firstPresent(JSONObject item, String... keys) {
         for (String key : keys) {
-            String value = item.optString(key, "");
+            String value = optText(item, key);
             if (!value.isEmpty()) {
                 return value;
             }
         }
         return "";
+    }
+
+    /** Android 的 optString 会把 JSON null 变成字符串 "null"，说明文字和图片路径都会原样露出来。 */
+    private static String optText(JSONObject item, String key) {
+        return item.isNull(key) ? "" : item.optString(key);
     }
 
     private static List<Image> readImages(JSONArray items) {
@@ -69,11 +74,11 @@ public final class PostDetail {
 
         private Image(JSONObject item) {
             id = item.optInt("id");
-            title = item.optString("title");
-            altText = item.optString("alt_text");
-            filePath = item.optString("file_url");
+            title = optText(item, "title");
+            altText = optText(item, "alt_text");
+            filePath = optText(item, "file_url");
             fileUrl = ApiClient.absoluteUrl(filePath);
-            thumbnailUrl = ApiClient.absoluteUrl(item.optString("thumbnail_url"));
+            thumbnailUrl = ApiClient.absoluteUrl(optText(item, "thumbnail_url"));
         }
 
         public static Image fromJson(JSONObject item) {

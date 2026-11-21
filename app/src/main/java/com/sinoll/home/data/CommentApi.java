@@ -22,6 +22,15 @@ public final class CommentApi {
         ApiClient.post("/comments", payload, AuthSession.get(context).token(), callback);
     }
 
+    /**
+     * 读取某条内容下的顶级评论，按时间正序分页；每条内嵌最多 3 条最早回复。
+     * 公开的已发布内容游客也能读，令牌为空时不带 Authorization 头即可。
+     */
+    public static void list(Context context, int postId, ApiClient.Callback callback) {
+        ApiClient.get("/comments?post_id=" + postId + "&page=1&per_page=50",
+                AuthSession.get(context).token(), callback);
+    }
+
     private CommentApi() {
     }
 }

@@ -36,13 +36,19 @@ public final class ArticleCard {
     }
 
     private void bindCover(Post post) {
+        boolean hasCover = post.coverUrl != null;
+        // 没封面的动态连整块一起收起，否则留下的渐变会被读成一张默认占位图。
+        binding.coverWrap.setVisibility(hasCover ? View.VISIBLE : View.GONE);
         if (post.isImages()) {
             binding.badge.setVisibility(View.VISIBLE);
             binding.badge.setText(context.getString(R.string.badge_image_count, post.imageCount));
         } else {
             binding.badge.setVisibility(View.GONE);
         }
-        binding.cover.setBackgroundResource(PostFormat.coverFallback(post.id));
+        if (hasCover) {
+            binding.cover.setBackgroundResource(PostFormat.coverFallback(post.id));
+        }
+        // 无图也要走一次 into：清掉复用时残留的位图，并把 tag 换掉以作废在途回调
         ImageLoader.into(binding.cover, post.coverUrl, PostFormat.dp(context, 320));
     }
 

@@ -61,12 +61,12 @@ public final class FeedCard {
     }
 
     private void bindCover(Post post) {
-        if (post.coverUrl == null) {
-            binding.imageWrap.setVisibility(View.GONE);
-            return;
+        boolean hasCover = post.coverUrl != null;
+        binding.imageWrap.setVisibility(hasCover ? View.VISIBLE : View.GONE);
+        if (hasCover) {
+            binding.image.setBackgroundResource(PostFormat.coverFallback(post.id));
         }
-        binding.imageWrap.setVisibility(View.VISIBLE);
-        binding.image.setBackgroundResource(PostFormat.coverFallback(post.id));
+        // 无图也要走一次 into：清掉复用时残留的位图，并把 tag 换掉以作废在途回调
         ImageLoader.into(binding.image, post.coverUrl, PostFormat.dp(context, 320));
     }
 

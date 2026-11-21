@@ -46,6 +46,13 @@
     <string name="action_send">发送</string>
     <string name="comment_empty">评论内容不能为空</string>
     <string name="comment_sent">评论已发布</string>
+    <string name="comment_list_title">评论</string>
+    <string name="comment_title_count">评论 %1$d</string>
+    <string name="comment_hidden">该评论已隐藏</string>
+    <string name="comment_reply_to">%1$s 回复 %2$s</string>
+    <string name="comment_more_replies">查看全部 %1$d 条回复</string>
+    <string name="comment_close">关闭评论</string>
+    <string name="comment_none">还没有评论</string>
     <string name="share_none">没有可以分享的应用</string>
 
     <string name="action_search">搜索</string>

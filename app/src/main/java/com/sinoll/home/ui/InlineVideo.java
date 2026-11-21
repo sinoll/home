@@ -18,6 +18,7 @@ import com.sinoll.home.data.Post;
 import com.sinoll.home.data.VideoCache;
 
 import java.io.File;
+import java.util.Collections;
 
 /**
  * 详情页里的内嵌播放器：封面先垫着，点一下才真正解码。
@@ -133,6 +134,8 @@ public final class InlineVideo extends FrameLayout {
         } else {
             video.start();
         }
+        // 详情页看过的视频也进缓存，下次从哪儿看都是本地起播
+        VideoCache.prefill(getContext(), Collections.singletonList(videoUrl));
         play.setVisibility(View.GONE);
         started = true;
     }

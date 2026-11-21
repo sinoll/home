@@ -102,6 +102,8 @@ public final class ComposeActivity extends AppCompatActivity {
     private Uri coverLocal;
     private String coverPath;
     private String existingCoverUrl;
+    /** 本轮刚上传的正文图片首图缩略图；动态更新时用它当封面，服务端不会自动重推。 */
+    private String imagesThumb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -500,6 +502,7 @@ public final class ComposeActivity extends AppCompatActivity {
             send(status);
             return;
         }
+        imagesThumb = null;
         runLegs(legs, 0, status);
     }
 
@@ -673,6 +676,7 @@ public final class ComposeActivity extends AppCompatActivity {
                     break;
                 default:
                     payload.put("content", PostHtml.article(text, paths));
+                    putMomentThumb(payload, paths);
             }
             payload.put("status", status);
             payload.put("visibility", visibility.value());
@@ -686,6 +690,25 @@ public final class ComposeActivity extends AppCompatActivity {
             throws JSONException {
         if (!value.isEmpty()) {
             payload.put(key, value);
+        }
+    }
+
+    /**
+     * 动态封面只在创建时由服务端按正文首图自动推导，更新时不重推：不提交 thumb 就保留旧封面。
+     * 所以「原来没图、编辑后加了图」的动态必须在这里显式补上 thumb，否则列表卡片永远没封面。
+     * 新建时交给服务端推导；更新时图片删空则清空封面，首图是本轮新上传的就用它的缩略图。
+     */
+    private void putMomentThumb(JSONObject payload, List<String> paths) throws JSONException {
+        if (postId <= 0) {
+            return;
+        }
+        if (paths.isEmpty()) {
+            payload.put("thumb", "");
+            return;
+        }
+        Cell first = cells.get(0);
+        if (first.local != null) {
+            payload.put("thumb", imagesThumb != null ? imagesThumb : paths.get(0));
         }
     }
 
@@ -767,6 +790,7 @@ public final class ComposeActivity extends AppCompatActivity {
                 for (int i = 0; i < targets.size() && i < result.paths.size(); i++) {
                     targets.get(i).path = result.paths.get(i);
                 }
+                imagesThumb = result.thumbnailPath;
             } else if (tag == LEG_VIDEO) {
                 videoPath = result.videoPath;
                 coverPath = result.thumbnailPath;
